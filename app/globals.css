@@ -1,0 +1,185 @@
+@import "tailwindcss";
+@import "mapbox-gl/dist/mapbox-gl.css";
+
+@theme {
+  /* Brand palette */
+  --color-storm-950: #050814;
+  --color-storm-900: #0a1024;
+  --color-storm-800: #0f1730;
+  --color-storm-700: #182240;
+  --color-storm-600: #1f2c52;
+  --color-storm-500: #2a3868;
+
+  --color-aurora-200: #b9ffe1;
+  --color-aurora-300: #7af5c4;
+  --color-aurora-400: #38e8a4;
+  --color-aurora-500: #14d488;
+  --color-aurora-600: #0aa66a;
+
+  --color-amber-tornado: #ff9d2f;
+  --color-magenta-tornado: #ff3d8b;
+
+  --color-glass-tint: rgba(255, 255, 255, 0.06);
+  --color-glass-stroke: rgba(255, 255, 255, 0.14);
+
+  /* Typography — variables come from next/font in app/layout.tsx */
+  --font-display: var(--font-display-loaded), "Iowan Old Style", "Apple Garamond", Georgia, serif;
+  --font-sans: var(--font-sans-loaded), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-mono-loaded), ui-monospace, monospace;
+
+  /* Glass / shadows */
+  --shadow-glass: 0 1px 0 0 rgba(255, 255, 255, 0.08) inset,
+                  0 0 0 1px rgba(255, 255, 255, 0.08),
+                  0 18px 40px -12px rgba(0, 0, 0, 0.6);
+  --shadow-glow-aurora: 0 0 32px -4px rgba(56, 232, 164, 0.45),
+                         0 0 64px -8px rgba(56, 232, 164, 0.25);
+  --shadow-glow-tornado: 0 0 32px -4px rgba(255, 61, 139, 0.55),
+                         0 0 64px -8px rgba(255, 157, 47, 0.35);
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body {
+    background: var(--color-storm-950);
+    color: white;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior-y: none;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: var(--color-glass-tint);
+    border: 1px solid var(--color-glass-stroke);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .glass-strong {
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(32px) saturate(200%);
+    -webkit-backdrop-filter: blur(32px) saturate(200%);
+    box-shadow: var(--shadow-glass);
+  }
+
+  .text-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    font-feature-settings: "ss01", "ss02", "liga";
+  }
+
+  .pad-safe-top {
+    padding-top: max(env(safe-area-inset-top), 1rem);
+  }
+  .pad-safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+  .pad-safe-x {
+    padding-left: max(env(safe-area-inset-left), 1rem);
+    padding-right: max(env(safe-area-inset-right), 1rem);
+  }
+
+  .grain::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    opacity: 0.5;
+    mix-blend-mode: overlay;
+    z-index: 1;
+  }
+}
+
+/* Mapbox dark style override */
+.mapboxgl-canvas {
+  outline: none;
+}
+.mapboxgl-ctrl-attrib,
+.mapboxgl-ctrl-logo {
+  opacity: 0.4;
+  filter: grayscale(1) invert(1);
+}
+
+/* Pulsing ring for FAB */
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.0); }
+  50% { box-shadow: 0 0 0 12px rgba(255, 255, 255, 0.0); }
+}
+
+/* Impact marker — persistent chip at the storm's closest pass to home */
+.impact-marker {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  width: 0;
+  height: 0;
+}
+.impact-marker .impact-pulse {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 61, 139, 0.45) 0%, rgba(255, 61, 139, 0) 70%);
+  pointer-events: none;
+}
+.impact-marker .impact-dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #ff9d2f, #ff3d8b);
+  box-shadow: 0 0 14px 2px rgba(255, 61, 139, 0.8);
+}
+.impact-marker .impact-chip {
+  position: absolute;
+  top: -28px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 11px;
+  letter-spacing: -0.005em;
+  padding: 4px 9px;
+  border-radius: 9999px;
+  color: #ffe5d4;
+  background: rgba(8, 5, 18, 0.85);
+  border: 1px solid rgba(255, 157, 47, 0.45);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.7);
+}
+.impact-marker .impact-chip::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  transform: translateX(-50%) rotate(45deg);
+  width: 6px;
+  height: 6px;
+  background: rgba(8, 5, 18, 0.85);
+  border-right: 1px solid rgba(255, 157, 47, 0.45);
+  border-bottom: 1px solid rgba(255, 157, 47, 0.45);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
